@@ -1,91 +1,86 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WebXR Hit Test with Debug</title>
-  <!-- Подключаем Three.js -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.126.1/build/three.min.js"></script>
-  <!-- Подключаем ARButton.js из примеров Three.js -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.126.1/examples/js/webxr/ARButton.js"></script>
-</head>
-<body style="margin: 0; overflow: hidden;">
-  <script>
-    let scene, camera, renderer, controller, hitTestSource, hitTestSourceRequested;
-    let reticle;
+  <title>Пример WebXR Hit Test</title>
+  <!-- Подключаем Three.js и ARButton.js с правильными путями -->
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.153.0/build/three.module.js';
+    import { ARButton } from 'https://cdn.jsdelivr.net/npm/three@0.153.0/examples/jsm/webxr/ARButton.js';
+
+    let scene, camera, renderer;
+    let controller, reticle;
+    let hitTestSource = null;
+    let hitTestSourceRequested = false;
+    let localReferenceSpace = null;
 
     function init() {
-      console.log("Initializing scene...");
-
-      // Создание сцены
       scene = new THREE.Scene();
 
-      // Инициализация камеры
       camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
-      
-      // Инициализация рендера
+
       renderer = new THREE.WebGLRenderer({ alpha: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.xr.enabled = true;
       document.body.appendChild(renderer.domElement);
 
-      // Включение поддержки WebXR
-      renderer.xr.enabled = true;
-      // Используем правильную функцию для создания кнопки AR
       document.body.appendChild(ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] }));
 
-      // Создание объекта reticle для Hit Test
-      const geometry = new THREE.RingGeometry(0.05, 0.06, 32).rotateX(- Math.PI / 2);
-      const material = new THREE.MeshBasicMaterial();
-      reticle = new THREE.Mesh(geometry, material);
+      const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+      light.position.set(0.5, 1, 0.25);
+      scene.add(light);
+
+      reticle = new THREE.Mesh(
+        new THREE.RingGeometry(0.1, 0.11, 32).rotateX(-Math.PI / 2),
+        new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+      );
       reticle.matrixAutoUpdate = false;
       reticle.visible = false;
       scene.add(reticle);
 
-      // Настройка контроллера для Hit Test
       controller = renderer.xr.getController(0);
       controller.addEventListener('select', onSelect);
       scene.add(controller);
 
-      // Запуск цикла анимации
-      renderer.setAnimationLoop(render);
+      window.addEventListener('resize', onWindowResize);
 
-      console.log("Scene initialized successfully.");
+      renderer.setAnimationLoop(render);
     }
 
-    // Функция для Hit Test
     function onSelect() {
-      console.log("Select event triggered.");
       if (reticle.visible) {
         const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        const material = new THREE.MeshPhongMaterial({ color: 0xffffff * Math.random() });
         const mesh = new THREE.Mesh(geometry, material);
         mesh.position.setFromMatrixPosition(reticle.matrix);
         scene.add(mesh);
       }
     }
 
-    // Цикл рендера
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
     function render(timestamp, frame) {
       if (frame) {
         const referenceSpace = renderer.xr.getReferenceSpace();
         const session = renderer.xr.getSession();
 
-        if (!hitTestSourceRequested) {
-          session.requestReferenceSpace('viewer').then((referenceSpace) => {
-            session.requestHitTestSource({ space: referenceSpace }).then((source) => {
+        if (hitTestSourceRequested === false) {
+          session.requestReferenceSpace('viewer').then(function (referenceSpace) {
+            session.requestHitTestSource({ space: referenceSpace }).then(function (source) {
               hitTestSource = source;
-              console.log("Hit test source requested.");
-            }).catch((err) => {
-              console.error("Error requesting hit test source:", err);
             });
-          }).catch((err) => {
-            console.error("Error requesting reference space:", err);
           });
 
-          session.addEventListener('end', () => {
+          session.addEventListener('end', function () {
             hitTestSourceRequested = false;
             hitTestSource = null;
-            console.log("XR session ended.");
           });
 
           hitTestSourceRequested = true;
@@ -96,10 +91,10 @@
 
           if (hitTestResults.length) {
             const hit = hitTestResults[0];
-            const hitPose = hit.getPose(referenceSpace);
+            const pose = hit.getPose(referenceSpace);
 
             reticle.visible = true;
-            reticle.matrix.fromArray(hitPose.transform.matrix);
+            reticle.matrix.fromArray(pose.transform.matrix);
           } else {
             reticle.visible = false;
           }
@@ -111,5 +106,6 @@
 
     init();
   </script>
-</body>
+</head>
+<body style="margin: 0; overflow: hidden;"></body>
 </html>
