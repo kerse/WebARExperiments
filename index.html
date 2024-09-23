@@ -1,28 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Prototype</title>
-    <!-- Подключаем A-Frame -->
-    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-    <!-- Подключаем AR.js с Marker Tracking -->
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AR Plane Detection</title>
+  <!-- Подключаем three.js и three.ar.js -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.126.1/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three.ar.js@latest/dist/three.ar.js"></script>
 </head>
 <body style="margin: 0; overflow: hidden;">
-    <a-scene embedded arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;">
-        <!-- Добавляем вашу 3D модель -->
-        <!-- CORS proxy нужен для корректной загрузки моделей с другого домена -->
-        <!-- Важно: создать и настроить собственный proxy для CORS -->
-        <a-marker preset="hiro">
-            <a-entity 
-                gltf-model="https://arjs-cors-proxy.herokuapp.com/https://raw.githack.com/AR-js-org/AR.js/master/aframe/examples/image-tracking/nft/trex/scene.gltf"
-                scale="5 5 5"
-                position="50 150 0">
-            </a-entity>
-        </a-marker>
-        <a-entity camera></a-entity>
-    </a-scene>
-</body>
+  <script>
+    // Основная инициализация
+    let scene, camera, renderer, arView, reticle, box;
 
+    THREE.ARUtils.getARDisplay().then(init);
+
+    function init(display) {
+      // Инициализация сцены
+      scene = new THREE.Scene();
+
+      // Инициализация WebGLRenderer
+      renderer = new THREE.WebGLRenderer({ alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      // Инициализация ARView
+      arView = new THREE.ARView(display, renderer);
+
+      // Камера AR с учетом отображения реальности
+      camera = new THREE.ARPerspectiveCamera(display, 60, window.innerWidth / window.innerHeight, display.depthNear, display.depthFar);
+
+      // Создание reticle (сетка для размещения объектов)
+      reticle = new THREE.ARReticle(display);
+      scene.add(reticle);
+
+      // Загрузка модели (здесь используем твою модель skull.glb)
+      const loader = new THREE.GLTFLoader();
+      loader.load('skull.glb', function(gltf) {
+        box = gltf.scene;
+        box.scale.set(0.5, 0.5, 0.5); // Масштабирование модели
+        box.visible = false; // Скрыта до обнаружения плоскости
+        scene.add(box);
+      });
+
+      // Основной цикл
+      display.requestAnimationFrame(update);
+    }
+
+    function update(time) {
+      // Обновление камеры и сцены
+      reticle.update();
+      arView.render();
+      renderer.render(scene, camera);
+
+      // Если плоскость обнаружена, размещаем модель
+      if (reticle.visible && box) {
+        box.position.setFromMatrixPosition(reticle.matrix);
+        box.visible = true;
+      }
+
+      requestAnimationFrame(update);
+    }
+  </script>
+</body>
 </html>
