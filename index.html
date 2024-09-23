@@ -4,8 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WebXR Hit Test with Debug</title>
+  <!-- Подключаем Three.js -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.126.1/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@webxr-input-profiles/motion-controllers@1.0.0/dist/webxr-input-profiles.js"></script>
+  <!-- Подключаем ARButton.js из примеров Three.js -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.126.1/examples/js/webxr/ARButton.js"></script>
 </head>
 <body style="margin: 0; overflow: hidden;">
   <script>
@@ -28,7 +30,8 @@
 
       // Включение поддержки WebXR
       renderer.xr.enabled = true;
-      document.body.appendChild(THREE.WebXR.createButton(renderer));
+      // Используем правильную функцию для создания кнопки AR
+      document.body.appendChild(ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] }));
 
       // Создание объекта reticle для Hit Test
       const geometry = new THREE.RingGeometry(0.05, 0.06, 32).rotateX(- Math.PI / 2);
