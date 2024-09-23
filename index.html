@@ -27,8 +27,9 @@
       // Инициализация ARView
       arView = new THREE.ARView(display, renderer);
 
-      // Камера AR с учетом отображения реальности
+      // Камера AR с учетом отображения реальности, настраиваем положение камеры
       camera = new THREE.ARPerspectiveCamera(display, 60, window.innerWidth / window.innerHeight, display.depthNear, display.depthFar);
+      camera.position.set(0, 1.6, 3); // Устанавливаем камеру на более удобное расстояние
 
       // Создание reticle (сетка для размещения объектов)
       reticle = new THREE.ARReticle(display);
