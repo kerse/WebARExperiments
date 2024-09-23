@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WebXR Hit Test</title>
+  <title>WebXR Hit Test with Debug</title>
   <script src="https://cdn.jsdelivr.net/npm/three@0.126.1/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@webxr-input-profiles/motion-controllers@1.0.0/dist/webxr-input-profiles.js"></script>
 </head>
@@ -13,6 +13,8 @@
     let reticle;
 
     function init() {
+      console.log("Initializing scene...");
+
       // Создание сцены
       scene = new THREE.Scene();
 
@@ -26,8 +28,6 @@
 
       // Включение поддержки WebXR
       renderer.xr.enabled = true;
-
-      // Добавление кнопки для активации WebXR
       document.body.appendChild(THREE.WebXR.createButton(renderer));
 
       // Создание объекта reticle для Hit Test
@@ -45,10 +45,13 @@
 
       // Запуск цикла анимации
       renderer.setAnimationLoop(render);
+
+      console.log("Scene initialized successfully.");
     }
 
     // Функция для Hit Test
     function onSelect() {
+      console.log("Select event triggered.");
       if (reticle.visible) {
         const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
         const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
@@ -68,12 +71,18 @@
           session.requestReferenceSpace('viewer').then((referenceSpace) => {
             session.requestHitTestSource({ space: referenceSpace }).then((source) => {
               hitTestSource = source;
+              console.log("Hit test source requested.");
+            }).catch((err) => {
+              console.error("Error requesting hit test source:", err);
             });
+          }).catch((err) => {
+            console.error("Error requesting reference space:", err);
           });
 
           session.addEventListener('end', () => {
             hitTestSourceRequested = false;
             hitTestSource = null;
+            console.log("XR session ended.");
           });
 
           hitTestSourceRequested = true;
@@ -95,4 +104,9 @@
       }
 
       renderer.render(scene, camera);
-   
+    }
+
+    init();
+  </script>
+</body>
+</html>
