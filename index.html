@@ -24,6 +24,12 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.body.appendChild(renderer.domElement);
 
+      // Включение поддержки WebXR
+      renderer.xr.enabled = true;
+
+      // Добавление кнопки для активации WebXR
+      document.body.appendChild(THREE.WebXR.createButton(renderer));
+
       // Создание объекта reticle для Hit Test
       const geometry = new THREE.RingGeometry(0.05, 0.06, 32).rotateX(- Math.PI / 2);
       const material = new THREE.MeshBasicMaterial();
@@ -58,16 +64,18 @@
         const referenceSpace = renderer.xr.getReferenceSpace();
         const session = renderer.xr.getSession();
 
-        if (hitTestSourceRequested === false) {
+        if (!hitTestSourceRequested) {
           session.requestReferenceSpace('viewer').then((referenceSpace) => {
             session.requestHitTestSource({ space: referenceSpace }).then((source) => {
               hitTestSource = source;
             });
           });
+
           session.addEventListener('end', () => {
             hitTestSourceRequested = false;
             hitTestSource = null;
           });
+
           hitTestSourceRequested = true;
         }
 
@@ -76,8 +84,6 @@
 
           if (hitTestResults.length) {
             const hit = hitTestResults[0];
-
-            const referenceSpace = renderer.xr.getReferenceSpace();
             const hitPose = hit.getPose(referenceSpace);
 
             reticle.visible = true;
@@ -89,13 +95,4 @@
       }
 
       renderer.render(scene, camera);
-    }
-
-    // Включаем WebXR
-    renderer.xr.enabled = true;
-    document.body.appendChild(THREE.WebXR.createButton(renderer));
-
-    init();
-  </script>
-</body>
-</html>
+   
