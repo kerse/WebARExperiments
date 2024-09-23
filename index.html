@@ -6,7 +6,7 @@
   <title>AR Plane Detection</title>
   <!-- Подключаем three.js и three.ar.js -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.126.1/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three.ar.js@latest/dist/three.ar.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three.ar.js@latest/dist/three.ar.min.js"></script>
 </head>
 <body style="margin: 0; overflow: hidden;">
   <script>
@@ -22,14 +22,15 @@
       // Инициализация WebGLRenderer
       renderer = new THREE.WebGLRenderer({ alpha: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio); // Устанавливаем правильное соотношение пикселей
       document.body.appendChild(renderer.domElement);
 
       // Инициализация ARView
       arView = new THREE.ARView(display, renderer);
 
-      // Камера AR с учетом отображения реальности, настраиваем положение камеры
-      camera = new THREE.ARPerspectiveCamera(display, 60, window.innerWidth / window.innerHeight, display.depthNear, display.depthFar);
-      camera.position.set(0, 1.6, 3); // Устанавливаем камеру на более удобное расстояние
+      // Настройка камеры AR
+      camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20); 
+      scene.add(camera);
 
       // Создание reticle (сетка для размещения объектов)
       reticle = new THREE.ARReticle(display);
@@ -62,6 +63,13 @@
 
       requestAnimationFrame(update);
     }
+
+    // Обработка изменения размера окна
+    window.addEventListener('resize', function() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
   </script>
 </body>
 </html>
