@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Prototype</title>
+    <!-- Подключаем A-Frame -->
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <!-- Подключаем AR.js с Marker Tracking -->
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+</head>
+<body style="margin: 0; overflow: hidden;">
+    <a-scene embedded arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;">
+        <!-- Добавляем вашу 3D модель -->
+        <!-- CORS proxy нужен для корректной загрузки моделей с другого домена -->
+        <!-- Важно: создать и настроить собственный proxy для CORS -->
+        <a-marker preset="hiro">
+            <a-entity 
+                gltf-model="url(skull.glb)" 
+                position="0 1.5 -3" 
+                scale="0.5 0.5 0.5">
+            </a-entity>
+        </a-marker>
+        <a-entity camera></a-entity>
+    </a-scene>
+</body>
+
+</html>
